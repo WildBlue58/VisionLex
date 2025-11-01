@@ -1,0 +1,262 @@
+/* 加载动画容器 */
+.loading-spinner__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.loading-spinner__fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-modal);
+}
+
+[data-theme="dark"] .loading-spinner__fullscreen {
+  background: rgba(17, 24, 39, 0.9);
+}
+
+.loading-spinner__text {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: white;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  animation: fadeInPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* 旋转环形加载动画 */
+.loading-spinner {
+  position: relative;
+  display: inline-block;
+}
+
+.loading-spinner--small {
+  width: 24px;
+  height: 24px;
+}
+
+.loading-spinner--medium {
+  width: 40px;
+  height: 40px;
+}
+
+.loading-spinner--large {
+  width: 64px;
+  height: 64px;
+}
+
+.loading-spinner__ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid transparent;
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner__ring:nth-child(2) {
+  border-top-color: var(--color-secondary);
+  animation-duration: 1.5s;
+  animation-direction: reverse;
+}
+
+.loading-spinner__ring:nth-child(3) {
+  border-top-color: var(--color-accent);
+  animation-duration: 2s;
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+}
+
+/* 渐变旋转加载动画 */
+.loading-spinner--gradient {
+  position: relative;
+}
+
+.loading-spinner--gradient::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  animation: spin 1.5s linear infinite;
+  z-index: -1;
+}
+
+.loading-spinner--gradient .loading-spinner__ring {
+  background: white;
+  border: none;
+}
+
+/* 点状加载动画 */
+.loading-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-dots--small {
+  gap: 4px;
+}
+
+.loading-dots--small span {
+  width: 6px;
+  height: 6px;
+}
+
+.loading-dots--medium span {
+  width: 8px;
+  height: 8px;
+}
+
+.loading-dots--large span {
+  width: 12px;
+  height: 12px;
+}
+
+.loading-dots span {
+  display: inline-block;
+  background: var(--gradient-primary);
+  border-radius: 50%;
+  animation: bounce 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+/* 脉冲加载动画 */
+.loading-pulse {
+  background: var(--color-primary);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.loading-pulse--small {
+  width: 24px;
+  height: 24px;
+}
+
+.loading-pulse--medium {
+  width: 40px;
+  height: 40px;
+}
+
+.loading-pulse--large {
+  width: 64px;
+  height: 64px;
+}
+
+/* 骨架屏加载 */
+.skeleton-loader {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 0px,
+    var(--color-bg-secondary) 40px,
+    var(--color-bg-tertiary) 80px
+  );
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+.skeleton-loader--rounded {
+  border-radius: var(--radius-md);
+}
+
+/* 卡片骨架屏 */
+.card-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-lg);
+  gap: var(--spacing-md);
+}
+
+.card-skeleton__image {
+  border-radius: var(--radius-lg);
+}
+
+.card-skeleton__title {
+  margin-top: var(--spacing-sm);
+}
+
+.card-skeleton__subtitle {
+  margin-top: var(--spacing-xs);
+}
+
+/* 动画定义 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}

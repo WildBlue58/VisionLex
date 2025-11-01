@@ -1,0 +1,248 @@
+.picture-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-xl);
+  margin: var(--spacing-xl) auto;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-gradient-lg);
+  border: 2px solid;
+  border-image: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.3) 0%,
+      rgba(236, 72, 153, 0.3) 100%
+    )
+    1;
+  transition: all var(--transition-base);
+}
+
+.picture-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: var(--shadow-gradient-xl);
+  border-image: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.5) 0%,
+      rgba(236, 72, 153, 0.5) 100%
+    )
+    1;
+}
+
+.picture-card--dragging {
+  border-image: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.8) 0%,
+      rgba(236, 72, 153, 0.8) 100%
+    )
+    1;
+  background: var(--gradient-card);
+  transform: scale(1.03);
+  box-shadow: var(--shadow-gradient-xl);
+}
+
+.picture-card--loading {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.picture-card__input {
+  display: none;
+}
+
+.picture-card__upload-area {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+  transition: all var(--transition-base);
+  position: relative;
+  min-height: 300px;
+}
+
+.picture-card__upload-area:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.picture-card__upload-area:hover .picture-card__upload-hint {
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: var(--shadow-xl);
+}
+
+.picture-card__image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 1;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+}
+
+/* 图片加载失败时的样式 */
+.picture-card__image[src=""],
+.picture-card__image:not([src]) {
+  opacity: 0.5;
+}
+
+.picture-card__upload-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+  z-index: 2;
+  /* 添加背景和阴影，确保文字清晰可见 */
+  background: rgba(255, 255, 255, 0.95);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-gradient);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all var(--transition-base);
+}
+
+.picture-card__upload-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-sm);
+  display: block;
+}
+
+.picture-card__upload-hint p {
+  font-size: var(--font-size-base);
+  margin: 0;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: var(--font-weight-semibold);
+}
+
+.picture-card__content {
+  margin-top: var(--spacing-lg);
+  text-align: center;
+}
+
+.picture-card__word {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 var(--spacing-md) 0;
+  text-transform: capitalize;
+  letter-spacing: -0.02em;
+}
+
+.picture-card__play-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid;
+  border-image: var(--gradient-primary) 1;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.picture-card__play-button:hover:not(:disabled) {
+  background: var(--gradient-button);
+  border-image: none;
+  border-color: transparent;
+  transform: scale(1.15);
+  box-shadow: var(--shadow-gradient);
+}
+
+.picture-card__play-button:active:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.picture-card__play-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-image: none;
+  border-color: var(--color-border);
+}
+
+.picture-card__play-button--playing {
+  background: var(--gradient-button);
+  border-image: none;
+  border-color: transparent;
+  animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: var(--shadow-gradient);
+}
+
+.picture-card__play-button--playing:hover:not(:disabled) {
+  background: var(--gradient-button-hover);
+  box-shadow: var(--shadow-gradient-lg);
+}
+
+.picture-card__play-icon {
+  width: 24px;
+  height: 24px;
+  /* SVG 图标已经是正确颜色，不需要滤镜 */
+}
+
+.picture-card__playing-indicator {
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.picture-card__loading {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .picture-card {
+    margin: var(--spacing-md) auto;
+    padding: var(--spacing-lg);
+    border-width: 1.5px;
+  }
+
+  .picture-card__word {
+    font-size: var(--font-size-2xl);
+  }
+
+  .picture-card__play-button {
+    padding: var(--spacing-md);
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .picture-card__upload-hint {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (min-width: 1024px) {
+  .picture-card {
+    max-width: 450px;
+  }
+
+  .picture-card:hover {
+    transform: translateY(-8px) scale(1.02);
+  }
+}
