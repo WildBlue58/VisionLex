@@ -1,118 +1,354 @@
-import { useState } from 'react'
-import './App.css'
-import PictureCard from './components/PictureCard';
-import {generateAudio} from './lib/audio.js'
+import { useState, useEffect, useCallback } from "react";
+import ErrorBoundary from "./components/ErrorBoundary";
+import LoadingSpinner from "./components/LoadingSpinner";
+import PictureCard from "./components/PictureCard";
+import CollectButton from "./components/WordCollection";
+import HistoryPanel from "./components/HistoryPanel";
+import { ToastContainer } from "./components/Toast";
+import { AppProvider, useApp } from "./contexts/AppContext.jsx";
+import { useImageUpload } from "./hooks/useImageUpload";
+import { useAIAnalysis } from "./hooks/useAIAnalysis";
+import { useAudio } from "./hooks/useAudio";
+import { useLearningHistory } from "./hooks/useLocalStorage";
+import { DEFAULT_PLACEHOLDER_IMAGE } from "./constants";
+import "./App.css";
 
-function App() {
-  const userPrompt = `分析图片内容，找出最能描述图片的一个英文单词，尽量选择更简单的A1~A2的词汇。
+// 环境变量检查
+const ENV_CHECK = {
+  hasKimiKey: !!import.meta.env.VITE_KIMI_API_KEY,
+  hasAudioToken: !!import.meta.env.VITE_AUDIO_ACCESS_TOKEN,
+};
 
-  返回JSON数据：
-  { 
-  "image_discription": "图片描述", 
-  "representative_word": "图片代表的英文单词", 
-  "example_sentence": "结合英文单词和图片描述，给出一个简单的例句", 
-  "explanation": "结合图片解释英文单词，段落以Look at...开头，将段落分句，每一句单独一行，解释的最后给一个日常生活有关的问句", 
-  "explanation_replys": ["根据explanation给出的回复1", "根据explanation给出的回复2"]
-  }`;
-
-  // 上传图片的状态 
-  const [word, setWord] = useState('请上传图片');
-  // 例句
-  const [sentence, setSentence] = useState('')
-  // 解释
-  const [explanations, setExplanations] = useState([]);
-  // 解释回复
-  const [expReply, setExpReply] = useState([]);
-  // 英文声音
-  const [audio, setAudio] = useState('');
-  // 详细内容展开
+/**
+ * 主应用组件
+ */
+function AppContent({ showToast }) {
+  const [wordData, setWordData] = useState(null);
   const [detailExpand, setDetailExpand] = useState(false);
-  // 图片预览
-  const [imgPreview, setImgPreview] = useState('https://res.bearbobo.com/resource/upload/W44yyxvl/upload-ih56twxirei.png')
 
-  const uploadImg = async (imageData) => {
-    setImgPreview(imageData);
-    const endpoint = 'https://api.moonshot.cn/v1/chat/completions';
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${import.meta.env.VITE_KIMI_API_KEY}`
+  // 自定义 Hooks
+  const {
+    imagePreview,
+    uploadError,
+    isUploading,
+    handleImageUpload,
+    resetUpload,
+  } = useImageUpload();
+  const {
+    isAnalyzing,
+    analysisError,
+    analysisResult,
+    analyzeImage,
+    cancelAnalysis,
+    resetAnalysis,
+  } = useAIAnalysis();
+  const {
+    audioUrl,
+    isGenerating: isGeneratingAudio,
+    audioError,
+    generateAudioUrl,
+    playAudio,
+    isPlaying,
+    cleanup: cleanupAudio,
+  } = useAudio();
+  const { addHistory } = useLearningHistory();
+
+  // 检查环境变量配置
+  useEffect(() => {
+    if (!ENV_CHECK.hasKimiKey) {
+      showToast(
+        "⚠️ API密钥未配置！请创建 .env 文件并配置 VITE_KIMI_API_KEY",
+        "error",
+        8000
+      );
+    }
+    if (!ENV_CHECK.hasAudioToken) {
+      console.warn("音频服务未配置，语音功能将不可用");
+    }
+  }, [showToast]);
+
+  // 监听上传错误
+  useEffect(() => {
+    if (uploadError) {
+      showToast(uploadError, "error");
+    }
+  }, [uploadError, showToast]);
+
+  // 监听分析错误
+  useEffect(() => {
+    if (analysisError) {
+      showToast(analysisError, "error");
+    }
+  }, [analysisError, showToast]);
+
+  // 处理图片上传和分析
+  const handleImageUploadAndAnalyze = useCallback(
+    async (imageData) => {
+      if (!imageData) return;
+
+      // 检查 API 密钥配置
+      if (!ENV_CHECK.hasKimiKey) {
+        showToast(
+          "⚠️ 无法分析：API密钥未配置。请查看浏览器控制台了解配置方法。",
+          "error",
+          6000
+        );
+        console.error(`
+===========================================
+❌ API 密钥未配置！
+===========================================
+
+请按以下步骤配置：
+
+1. 在项目根目录创建 .env 文件
+2. 添加以下内容（将 your_key 替换为真实密钥）：
+   VITE_KIMI_API_KEY=your_key
+
+3. 重启开发服务器：
+   npm run dev
+
+API 密钥获取地址：
+https://platform.moonshot.cn/console/api-keys
+
+===========================================
+        `);
+        return;
+      }
+
+      resetAnalysis();
+
+      // 分析图片
+      const result = await analyzeImage(imageData);
+
+      if (result) {
+        setWordData({
+          ...result,
+          imageData,
+          timestamp: Date.now(),
+        });
+
+        // 添加到历史记录
+        addHistory({
+          ...result,
+          imageData,
+        });
+
+        // 生成音频（如果配置了音频服务）
+        if (result.example_sentence && ENV_CHECK.hasAudioToken) {
+          try {
+            await generateAudioUrl(result.example_sentence);
+          } catch (error) {
+            console.error("音频生成失败:", error);
+            showToast("音频生成失败", "warning");
+          }
+        }
+
+        showToast("分析完成！", "success");
+      }
+    },
+    [
+      analyzeImage,
+      generateAudioUrl,
+      addHistory,
+      showToast,
+      cleanupAudio,
+      resetAnalysis,
+    ]
+  );
+
+  // 处理图片上传
+  const handleUpload = useCallback(
+    async (file) => {
+      const imageData = await handleImageUpload(file);
+      if (imageData) {
+        await handleImageUploadAndAnalyze(imageData);
+      }
+    },
+    [handleImageUpload, handleImageUploadAndAnalyze]
+  );
+
+  // 重新分析当前图片
+  const handleRetryAnalysis = useCallback(async () => {
+    if (imagePreview) {
+      await handleImageUploadAndAnalyze(imagePreview);
+    }
+  }, [imagePreview, handleImageUploadAndAnalyze]);
+
+  // 选择历史记录项
+  const handleSelectHistoryItem = useCallback((item) => {
+    setWordData(item);
+    setDetailExpand(false);
+    if (item.imageData) {
+      // 如果需要，可以重新生成音频
+    }
+  }, []);
+
+  // 清理资源（仅在组件卸载时）
+  useEffect(() => {
+    return () => {
+      cleanupAudio();
     };
-    setWord('分析中...');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 只在卸载时清理，不依赖 cleanupAudio 避免意外清理
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify({
-        model: 'moonshot-v1-8k-vision-preview',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: "image_url",
-                image_url: { "url": imageData, },
-              },
-              {
-                type: "text", text: userPrompt,
-
-              }]
-          }],
-        stream: false
-      })
-    })
-    const data = await response.json();
-    const replyData = JSON.parse(data.choices[0].message.content);
-    //console.log(replyData);
-    setWord(replyData.representative_word);
-    setSentence(replyData.example_sentence);
-    setExplanations(replyData.explanation.split('\n'));
-    setExpReply(replyData.explanation_replys);
-
-    // Url -> Audio 一直都在
-    // base64 资源 比较小 -> atob -> uint8Array -> blob -> URL.createObjectURL(blob) -> 临时地址 -> audio 展示 
-    const audioUrl = await generateAudio(replyData.example_sentence);
-    console.log(audioUrl,'app');
-    setAudio(audioUrl)
-  }
+  const isLoading = isUploading || isAnalyzing || isGeneratingAudio;
+  const currentWord = wordData?.representative_word || "请上传图片";
+  const currentSentence = wordData?.example_sentence || "";
+  const explanations = wordData?.explanations || [];
+  const expReplies = wordData?.explanation_replys || [];
+  const currentImagePreview =
+    imagePreview || wordData?.imageData || DEFAULT_PLACEHOLDER_IMAGE;
 
   return (
-    <div className="container">
-      <PictureCard
-        audio={audio}
-        word={word}
-        uploadImg={uploadImg}
-      />
-      <div className="output">
-        <div>{sentence}</div>
-        <div className="details">
-          <button onClick={() => setDetailExpand(!detailExpand)}>Talk about it</button>
-          {
-            detailExpand ? (
-              <div className="expand">
-                <img src={imgPreview} alt="preview" />
-                {
-                  explanations.map((explanation, index) => (
-                    <div key={index} className="explanation">
-                      {explanation}
+    <div className="app-container">
+      {/* 历史记录面板 */}
+      <HistoryPanel onSelectItem={handleSelectHistoryItem} />
+
+      {/* 主内容区 */}
+      <main className="app-main">
+        <PictureCard
+          imagePreview={currentImagePreview}
+          word={currentWord}
+          audioUrl={audioUrl}
+          isPlaying={isPlaying}
+          onImageUpload={handleUpload}
+          onPlayAudio={playAudio}
+          isLoading={isLoading}
+        />
+
+        {/* 加载状态 */}
+        {isLoading && (
+          <div className="app-loading">
+            <LoadingSpinner
+              text={
+                isUploading
+                  ? "图片处理中..."
+                  : isAnalyzing
+                  ? "AI 分析中..."
+                  : isGeneratingAudio
+                  ? "生成音频中..."
+                  : "处理中..."
+              }
+            />
+            {isAnalyzing && (
+              <button
+                className="app-cancel-button"
+                onClick={cancelAnalysis}
+                aria-label="取消分析"
+              >
+                取消
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 错误提示 */}
+        {(analysisError || uploadError) && !isLoading && (
+          <div className="app-error">
+            <p>{analysisError || uploadError}</p>
+            {analysisError && imagePreview && (
+              <button
+                className="app-retry-button"
+                onClick={handleRetryAnalysis}
+                aria-label="重新分析"
+              >
+                重新分析
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 单词信息和详情 */}
+        {wordData && !isLoading && (
+          <div className="app-output">
+            {currentSentence && (
+              <div className="app-sentence">{currentSentence}</div>
+            )}
+
+            {/* 收藏按钮 */}
+            <div className="app-actions">
+              <CollectButton wordData={wordData} />
+            </div>
+
+            {/* 详情面板 */}
+            <div className="app-details">
+              <button
+                className="app-details__toggle"
+                onClick={() => setDetailExpand(!detailExpand)}
+                aria-expanded={detailExpand}
+              >
+                {detailExpand ? "▼" : "▲"} Talk about it
+              </button>
+
+              {detailExpand && (
+                <div className="app-details__content">
+                  <img
+                    src={currentImagePreview}
+                    alt="预览"
+                    className="app-details__image"
+                  />
+                  {explanations.length > 0 && (
+                    <div className="app-details__explanations">
+                      {explanations.map((explanation, index) => (
+                        <p key={index} className="app-details__explanation">
+                          {explanation}
+                        </p>
+                      ))}
                     </div>
-                  ))
-                }
-                {
-                  expReply.map((reply, index) => (
-                    <div key={index} className="reply">
-                      {reply}
+                  )}
+                  {expReplies.length > 0 && (
+                    <div className="app-details__replies">
+                      {expReplies.map((reply, index) => (
+                        <div key={index} className="app-details__reply">
+                          {reply}
+                        </div>
+                      ))}
                     </div>
-                  ))
-                }
-              </div>
-            ) : (
-              <div className="fold" />
-            )
-          }
-        </div>
-      </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
-  )
+  );
 }
 
-export default App
+/**
+ * App 根组件（带 ErrorBoundary 和 Context Provider）
+ */
+function App() {
+  const [toasts, setToasts] = useState([]);
+
+  const showToast = useCallback((message, type = "info", duration = 3000) => {
+    const id = Date.now().toString();
+    const newToast = { id, message, type, duration };
+    setToasts((prev) => [...prev, newToast]);
+  }, []);
+
+  const hideToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <AppProvider>
+        <AppWithToast showToast={showToast} />
+        <ToastContainer toasts={toasts} onClose={hideToast} />
+      </AppProvider>
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * 包装组件，将 showToast 传递给 AppContent
+ */
+function AppWithToast({ showToast }) {
+  const appContext = useApp();
+  const finalShowToast = appContext?.showToast || showToast;
+
+  return <AppContent showToast={finalShowToast} />;
+}
+
+export default App;
