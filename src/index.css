@@ -1,233 +1,111 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* 图词（VisionLex）全局样式 */
+/* 引入设计系统 */
+@import "./styles/reset.css";
+@import "./styles/variables.css";
+@import "./styles/animations.css";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* 全局基础样式 */
+* {
+  box-sizing: border-box;
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+html {
+  font-family: var(--font-family-base);
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  transition: background-color var(--transition-base),
+    color var(--transition-base);
+}
+
+#root {
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-button:hover {
-  border-color: #646cff;
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-.card {
-  padding: 2em;
-}
-
 #app {
-  max-width: 1280px;
-  /* margin: 0 auto;
-  padding: 2rem; */
-  text-align: center;
-  color: white;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  a:hover {
-    color: #747bff;
-  }
-
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: start;
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-  font-size: .85rem;
-   background: linear-gradient(180deg, #e3f2fd 0%, #1976d2 100%);
-}
-
-#selectImage {
-  display: none;
-}
-
-.input {
-  width: 200px;
-}
-
-.output {
-  margin-top: 20px;
-  /* min-height: 300px; */
-  width: 80%;
-  text-align: center;
-  font-weight: bold;
-}
-
-.preview img {
-  max-width: 100%;
-}
-
-button {
-  padding: 0 10px;
-  margin-left: 6px;
-}
-
-.details {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.details button {
-  background-color: black;
-  color: white;
-  width: 160px;
-  height: 32px;
-  border-radius: 8px 8px 0 0;
-  border: none;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.details .fold {
-  width: 200px;
-  height: 30px;
-  background-color: white;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.details .expand {
-  width: 200px;
-  height: 88vh;
-  background-color: white;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.expand img {
-  width: 60%;
-  margin-top: 20px;
-  border-radius: 6px;
-}
-
-.expand .explanation {
-  color: black;
-  font-weight: normal;
-}
-
-.expand .explanation p {
-  margin: 0 10px 10px 10px;
-}
-
-.expand .reply {
-  color: black;
-  font-weight: normal;
-  margin-top: 20px;
-}
-
-.expand .reply p {
-  padding: 4px 10px;
-  margin: 0 10px 10px 10px;
-  border-radius: 6px;
-  border: solid 1px grey;
-}
-
-#selectImage {
-  display: none;
-}
-
-.card {
-    border-radius: 16px;
-    padding: 20px;
-    margin-top: 40px;
-    height: 280px;
-    box-shadow: 0 4px 24px 0 rgba(25, 118, 210, 0.15);
-    background: rgba(255, 255, 255, 0.75);
-    box-sizing: border-box;
-    backdrop-filter: blur(6px);
-    color: #1976d2; /* 统一天蓝色字体 */
-}
-
-.card * {
-    color: #1976d2 !important;
-}
-
-.upload {
-  width: 160px;
-  height: 160px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.upload img {
+  min-height: 100vh;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.word {
-  margin-top: 20px;
-  font-size: 16px;
-  color: rgb(255,255,255);
-}
-.playAudio {
-  margin-top: 16px;
 }
 
-.playAudio img {
-  cursor: pointer;
+/* 滚动条样式 - 蓝粉渐变主题 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all var(--transition-base);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gradient-button-hover);
+  border-width: 1px;
+}
+
+/* 选择文本样式 - 蓝粉渐变 */
+::selection {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.8) 0%,
+    rgba(236, 72, 153, 0.8) 100%
+  );
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+::-moz-selection {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.8) 0%,
+    rgba(236, 72, 153, 0.8) 100%
+  );
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 焦点样式 - 渐变边框 */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.3);
+}
+
+:focus-visible:has([data-gradient-focus]) {
+  outline-color: transparent;
+  background-image: var(--gradient-primary);
+  background-clip: padding-box;
+  box-shadow: 0 0 0 2px var(--gradient-primary);
+}
+
+/* 响应式字体大小 */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 1280px) {
+  html {
+    font-size: 18px;
+  }
 }
